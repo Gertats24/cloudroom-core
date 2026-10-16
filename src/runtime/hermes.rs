@@ -9,7 +9,7 @@ pub(super) const HERMES: cursor::Flavor = cursor::Flavor {
     harness: "hermes",
     name: "Hermes",
     native_path: |home, _| home.join(DATABASE),
-    valid_id: cursor::valid_id,
+    valid_id: hermes_valid_id,
     capture: false,
     notices: &[],
     // Hermes replays the whole conversation on `session/load`; Cloudroom already has it.
@@ -17,6 +17,12 @@ pub(super) const HERMES: cursor::Flavor = cursor::Flavor {
     explain_stops: true,
 };
 const DATABASE: &str = "state.db";
+/// Hermes ACP session ids are `local-` plus 64 lowercase hex digits (state.db `sessions.id`).
+fn hermes_valid_id(id: &str) -> bool {
+    id.strip_prefix("local-").is_some_and(|hex| {
+        hex.len() == 64 && hex.bytes().all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+    }) || cursor::valid_id(id)
+}
 /// The efforts Local threads offer for Hermes (provider-acp).
 pub const REASONING_LEVELS: &[&str] = &["none", "low", "medium", "high", "xhigh", "max"];
 
